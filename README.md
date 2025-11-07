@@ -148,14 +148,32 @@ You can customize the processing with additional optional arguments:
 <details>
 <summary><strong>Markdown support</strong></summary>
 <br>
-We also provide a markdown support for PageIndex. You can use the `-md` flag to generate a tree structure for a markdown file.
+We also provide markdown support for PageIndex. You can use the `--md_path` flag to generate a tree structure for a markdown file.
 
 ```bash
 python3 run_pageindex.py --md_path /path/to/your/document.md
 ```
 
-> Notice: in this function, we use "#" to determine node heading and their levels. For example, "##" is level 2, "###" is level 3, etc. Make sure your markdown file is formatted correctly. If your Markdown file was converted from a PDF or HTML, we don’t recommend using this function, since most existing conversion tools cannot preserve the original hierarchy. Instead, use our [PageIndex OCR](https://pageindex.ai/blog/ocr), which is designed to preserve the original hierarchy, to convert the PDF to a markdown file and then use this function.
-</details>
+> Notice: in this function, we use "#" to determine node heading and their levels. For example, "##" is level 2, "###" is level 3, etc. Make sure your markdown file is formatted correctly. If your Markdown file was converted from a PDF or HTML, we don't recommend using this function, since most existing conversion tools cannot preserve the original hierarchy. Instead, use our [PageIndex OCR](https://pageindex.ai/blog/ocr), which is designed to preserve the original hierarchy, to convert the PDF to a markdown file and then use this function.
+
+<br>
+
+### **4. EPUB Support**
+
+PageIndex now supports EPUB (Electronic Publication) format files! You can convert EPUB files to tree structures with:
+
+```bash
+python3 run_pageindex.py --epub_path /path/to/your/document.epub
+```
+
+EPUB support includes:
+- Automatic chapter extraction and identification
+- Metadata extraction (title, author, language)
+- Tree structure generation with node IDs
+- Optional summary generation for each chapter
+- Support for both single-chapter and multi-chapter EPUB files
+
+For detailed EPUB conversion documentation, see [EPUB_CONVERSION_GUIDE.md](EPUB_CONVERSION_GUIDE.md)</details>
 
 ---
 
