@@ -3,12 +3,14 @@ import os
 import json
 from pageindex import *
 from pageindex.page_index_md import md_to_tree
+from pageindex.page_index_epub import epub_to_tree
 
 if __name__ == "__main__":
     # Set up argument parser
-    parser = argparse.ArgumentParser(description='Process PDF or Markdown document and generate structure')
+    parser = argparse.ArgumentParser(description='Process PDF, Markdown or EPUB document and generate structure')
     parser.add_argument('--pdf_path', type=str, help='Path to the PDF file')
     parser.add_argument('--md_path', type=str, help='Path to the Markdown file')
+    parser.add_argument('--epub_path', type=str, help='Path to the EPUB file')
 
     parser.add_argument('--model', type=str, default='gpt-4o-2024-11-20', help='Model to use')
 
@@ -38,10 +40,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Validate that exactly one file type is specified
-    if not args.pdf_path and not args.md_path:
-        raise ValueError("Either --pdf_path or --md_path must be specified")
-    if args.pdf_path and args.md_path:
-        raise ValueError("Only one of --pdf_path or --md_path can be specified")
+    if not args.pdf_path and not args.md_path and not args.epub_path:
+        raise ValueError("Either --pdf_path, --md_path, or --epub_path must be specified")
+    num_inputs = sum([bool(args.pdf_path), bool(args.md_path), bool(args.epub_path)])
+    if num_inputs > 1:
+        raise ValueError("Only one of --pdf_path, --md_path, or --epub_path can be specified")
     
     if args.pdf_path:
         # Validate PDF file
@@ -125,6 +128,58 @@ if __name__ == "__main__":
         md_name = os.path.splitext(os.path.basename(args.md_path))[0]    
         output_dir = './results'
         output_file = f'{output_dir}/{md_name}_structure.json'
+        os.makedirs(output_dir, exist_ok=True)
+        
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(toc_with_page_number, f, indent=2, ensure_ascii=False)
+        
+        print(f'Tree structure saved to: {output_file}')
+
+    elif args.epub_path:
+        # Validate EPUB file
+        if not args.epub_path.lower().endswith('.epub'):
+            raise ValueError("EPUB file must have .epub extension")
+        if not os.path.isfile(args.epub_path):
+            raise ValueError(f"EPUB file not found: {args.epub_path}")
+            
+        # Process EPUB file
+        print('Processing EPUB file...')
+        
+        # Process the EPUB
+        import asyncio
+        
+        # Use ConfigLoader to get consistent defaults
+        from pageindex.utils import ConfigLoader
+        config_loader = ConfigLoader()
+        
+        # Create options dict with user args
+        user_opt = {
+            'model': args.model,
+            'if_add_node_summary': args.if_add_node_summary,
+            'if_add_doc_description': args.if_add_doc_description,
+            'if_add_node_text': args.if_add_node_text,
+            'if_add_node_id': args.if_add_node_id
+        }
+        
+        # Load config with defaults from config.yaml
+        opt = config_loader.load(user_opt)
+        
+        toc_with_page_number = asyncio.run(epub_to_tree(
+            epub_path=args.epub_path,
+            if_add_node_id=opt.if_add_node_id,
+            if_add_node_summary=opt.if_add_node_summary,
+            if_add_doc_description=opt.if_add_doc_description,
+            if_add_node_text=opt.if_add_node_text,
+            summary_token_threshold=args.summary_token_threshold,
+            model=opt.model
+        ))
+        
+        print('Parsing done, saving to file...')
+        
+        # Save results
+        epub_name = os.path.splitext(os.path.basename(args.epub_path))[0]    
+        output_dir = './results'
+        output_file = f'{output_dir}/{epub_name}_structure.json'
         os.makedirs(output_dir, exist_ok=True)
         
         with open(output_file, 'w', encoding='utf-8') as f:

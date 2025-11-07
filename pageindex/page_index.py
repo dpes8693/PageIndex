@@ -1066,6 +1066,7 @@ def page_index_main(doc, opt=None):
         raise ValueError("Unsupported input type. Expected a PDF file path or BytesIO object.")
 
     print('Parsing PDF...')
+    # page_text, token_length
     page_list = get_page_tokens(doc)
 
     logger.info({'total_page_number': len(page_list)})
